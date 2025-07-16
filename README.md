@@ -1,38 +1,45 @@
-# Voice Notifier for Claude Code
+# Claude Voice Notifier
 
-A Rust-based voice notification system that announces when Claude Code completes tasks using ElevenLabs TTS.
+A Rust-based voice notification system for Claude Code that provides intelligent audio summaries when Claude completes tasks.
 
 ## Features
 
-- 🔊 High-quality voice notifications using ElevenLabs API
-- 🔄 Automatic fallback to macOS `say` command
-- 🪝 Claude Code Stop hook integration
-- ⚡ Fast and reliable Rust implementation
-- 🏗️ Nix flake for reproducible builds
+- 🎯 **Intelligent Summarization**: Uses Claude 4 Sonnet to create concise summaries of completed work
+- 🔊 **High-Quality Voice**: Integrates with ElevenLabs for natural text-to-speech
+- 🔄 **Robust Fallbacks**: Falls back to macOS `say` command if external services fail
+- 🪝 **Claude Code Integration**: Works seamlessly with Claude Code's hook system
+- 📝 **Transcript Parsing**: Automatically extracts and processes Claude's responses
 
-## Current Status
+## How It Works
 
-✅ **Phase 1 Complete**: Basic voice notifications are working!
-- ElevenLabs TTS integration
-- Claude Code hook triggers successfully
-- Fallback chain implemented
+1. When Claude Code finishes a task, the stop hook triggers
+2. The voice notifier reads Claude's transcript (JSONL format)
+3. Extracts the last assistant message
+4. Sends it to Claude 4 Sonnet for intelligent summarization
+5. Converts the summary to speech using ElevenLabs
+6. Plays the audio notification
 
-🚧 **Phase 2 In Progress**: Intelligent summaries
-- Parse Claude's responses from transcript
-- Summarize with Anthropic API
-- Context-aware notifications
+## Prerequisites
+
+- Rust (latest stable)
+- macOS (for `afplay` audio playback)
+- Claude Code with hooks enabled
+- API Keys:
+  - ElevenLabs API key (required for TTS)
+  - Anthropic API key (optional, for intelligent summaries)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repo-url>
-cd voice-notifier
+git clone https://github.com/AnthonyRonning/claude-voice-notifier.git
+cd claude-voice-notifier
 ```
 
-2. Enter the Nix development shell:
+2. Create a `.env` file with your API keys:
 ```bash
-nix develop
+cp .env.example .env
+# Edit .env and add your API keys
 ```
 
 3. Build the project:
@@ -40,35 +47,18 @@ nix develop
 cargo build --release
 ```
 
-4. Create a `.env` file:
-```bash
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file with:
-```
-ELEVEN_LABS_API_KEY=your_key_here
-ELEVEN_LABS_VOICE_ID=voice_id_here  # Optional
-ANTHROPIC_API_KEY=your_anthropic_key  # For Phase 2
-```
-
-### Claude Code Hook Setup
-
-1. Add to your Claude Code settings:
+4. Set up the Claude Code hook by adding to your Claude settings:
 ```json
 {
   "hooks": {
-    "stop": "/path/to/voice-notifier/claude_stop_hook.sh"
+    "Stop": [
+      {
+        "command": "/path/to/claude-voice-notifier/claude_stop_hook.sh"
+      }
+    ]
   }
 }
 ```
-
-2. The hook will trigger voice notifications when Claude finishes responding.
 
 ## Usage
 
@@ -80,36 +70,39 @@ cargo run -- --test
 # Custom message
 cargo run -- -s "Build completed successfully"
 
-# Play specific audio file
-cargo run -- -f audio.mp3
-
-# Force fallback to say command
-cargo run -- --force-say -s "Testing fallback"
+# Process a Claude transcript
+cargo run -- --transcript /path/to/transcript.jsonl
 ```
 
-### With Claude Code
-Once configured, the voice notifier automatically announces when Claude completes tasks.
+### CLI Options
+- `-s, --text <TEXT>`: Text to speak
+- `-f, --file <FILE>`: Audio file to play
+- `--test`: Test mode with default notification
+- `--transcript <PATH>`: Process a Claude transcript file
+- `--force-say`: Force use of macOS say command
+- `--keep-temp`: Keep temporary files for debugging
+
+## Configuration
+
+Environment variables (via `.env`):
+- `ELEVEN_LABS_API_KEY`: Your ElevenLabs API key (required)
+- `ELEVEN_LABS_VOICE_ID`: Voice ID (defaults to "Rachel")
+- `ELEVEN_LABS_MODEL_ID`: Model ID (defaults to "eleven_multilingual_v2")
+- `ANTHROPIC_API_KEY`: Your Anthropic API key (optional, enables intelligent summaries)
 
 ## Architecture
 
 ```
-Claude Code → Stop Hook → voice-notifier
+Claude Code → Stop Hook → Voice Notifier
                               ↓
-                        ElevenLabs API
+                    Extract Last Message
                               ↓
-                     [Audio File] → afplay
+                    Anthropic Summarization
                               ↓
-                        (Fallback: mac say)
+                    ElevenLabs TTS
+                              ↓
+                    Audio Playback
 ```
-
-## Troubleshooting
-
-- **"wht?" error**: Path issue with nix-shell temp directories - see [Implementation Notes](docs/IMPLEMENTATION_NOTES.md#1-nix-shell-temp-directory-issue-with-afplay)
-- **No sound**: Check your system volume and `.env` configuration
-- **Hook not triggering**: Verify the path in Claude Code settings and that it returns `{"decision": "approve"}`
-- **Hook script issues**: Must use `#!/bin/sh` (not bash) and absolute paths
-
-For detailed troubleshooting, see [Implementation Notes](docs/IMPLEMENTATION_NOTES.md).
 
 ## Development
 
@@ -120,11 +113,24 @@ RUST_LOG=voice_notifier=debug cargo run
 # Run tests
 cargo test
 
-# Check code
-cargo clippy
+# Format code
 cargo fmt
+
+# Run linter
+cargo clippy
 ```
+
+## Troubleshooting
+
+1. **No audio playing**: Ensure you're on macOS with `afplay` available
+2. **API errors**: Check your API keys in `.env`
+3. **Hook not triggering**: Verify hook permissions and path in Claude settings
+4. **Check logs**: Look at `~/.config/voice-notifier/hook.log`
 
 ## License
 
 MIT
+
+## Acknowledgments
+
+Built for use with [Claude Code](https://claude.ai/code) by Anthropic.

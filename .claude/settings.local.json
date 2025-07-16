@@ -8,5 +8,18 @@
       "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/tony/Dev/Personal/voice-notifier/claude_stop_hook.sh"
+          }
+        ]
+      }
+    ]
   }
 }

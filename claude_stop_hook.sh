@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Claude Stop Hook - Voice Notifier
 # This script is called when Claude finishes responding
@@ -22,10 +22,12 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     if [ -n "$LAST_ASSISTANT_MSG" ]; then
         # For now, just play a simple notification
         # TODO: Extract text and summarize
-        cargo run --manifest-path=/Users/tony/Dev/Personal/voice-notifier/Cargo.toml -- \
-            -s "Claude has finished the task" 2>&1 >> ~/.config/voice-notifier/hook.log
+        # Use the compiled binary instead of cargo run for reliability
+        /Users/tony/Dev/Personal/voice-notifier/target/debug/voice-notifier \
+            -s "Claude has finished the task" 2>&1 >> ~/.config/voice-notifier/hook.log || \
+        echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
     fi
 fi
 
-# Return decision to allow Claude to stop
-echo '{"decision": "allow"}'
+# Return decision to approve Claude to stop
+echo '{"decision": "approve"}'

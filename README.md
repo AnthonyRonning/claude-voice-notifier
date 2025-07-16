@@ -7,8 +7,9 @@ A Rust-based voice notification system for Claude Code that provides intelligent
 - 🎯 **Intelligent Summarization**: Uses Claude 4 Sonnet to create concise summaries of completed work
 - 🔊 **High-Quality Voice**: Integrates with ElevenLabs for natural text-to-speech
 - 🔄 **Robust Fallbacks**: Falls back to macOS `say` command if external services fail
-- 🪝 **Claude Code Integration**: Works seamlessly with Claude Code's hook system
+- 🪝 **Claude Code Integration**: Works with both Stop and Notification hooks
 - 📝 **Transcript Parsing**: Automatically extracts and processes Claude's responses
+- 🔔 **Smart Notifications**: Different messages for task completion vs permission requests
 
 ## How It Works
 
@@ -47,11 +48,16 @@ cp .env.example .env
 cargo build --release
 ```
 
-4. Set up the Claude Code hook by adding to your Claude settings:
+4. Set up the Claude Code hooks by adding to your Claude settings:
 ```json
 {
   "hooks": {
     "Stop": [
+      {
+        "command": "/path/to/claude-voice-notifier/claude_stop_hook.sh"
+      }
+    ],
+    "Notification": [
       {
         "command": "/path/to/claude-voice-notifier/claude_stop_hook.sh"
       }

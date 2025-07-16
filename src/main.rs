@@ -36,6 +36,12 @@ struct Args {
 
     #[arg(long, help = "Transcript file path from Claude")]
     transcript: Option<PathBuf>,
+
+    #[arg(long, help = "Hook event type (Stop or Notification)")]
+    hook_event: Option<String>,
+
+    #[arg(long, help = "Hook message (for Notification events)")]
+    hook_message: Option<String>,
 }
 
 #[tokio::main]
@@ -66,11 +72,32 @@ async fn main() -> Result<()> {
         return player.play_audio_file(args.file.unwrap()).await;
     } else if let Some(transcript_path) = args.transcript {
         // Process transcript to get summary
-        match process_transcript(&config, &transcript_path).await {
-            Ok(summary) => summary,
-            Err(e) => {
-                error!("Failed to process transcript: {}", e);
-                "Claude has finished a task".to_string()
+        if let Some(event_type) = &args.hook_event {
+            match process_transcript_with_context(
+                &config,
+                &transcript_path,
+                event_type,
+                args.hook_message.as_deref(),
+            )
+            .await
+            {
+                Ok(summary) => summary,
+                Err(e) => {
+                    error!("Failed to process transcript: {}", e);
+                    match event_type.as_str() {
+                        "Notification" => "Claude Code needs your attention".to_string(),
+                        _ => "Claude has finished a task".to_string(),
+                    }
+                }
+            }
+        } else {
+            // Legacy mode without event type
+            match process_transcript(&config, &transcript_path).await {
+                Ok(summary) => summary,
+                Err(e) => {
+                    error!("Failed to process transcript: {}", e);
+                    "Claude has finished a task".to_string()
+                }
             }
         }
     } else {
@@ -130,6 +157,49 @@ async fn process_transcript(config: &Config, transcript_path: &PathBuf) -> Resul
     } else {
         info!("No Anthropic API key configured, using simple truncation");
         Ok(truncate_message(&last_message))
+    }
+}
+
+async fn process_transcript_with_context(
+    config: &Config,
+    transcript_path: &PathBuf,
+    event_type: &str,
+    message: Option<&str>,
+) -> Result<String> {
+    info!(
+        "Processing transcript from: {:?} for event: {}",
+        transcript_path, event_type
+    );
+
+    // Extract the last assistant message
+    let last_message = extract_last_assistant_message(transcript_path)?;
+
+    // If we have an Anthropic API key, summarize the message with context
+    if let Some(api_key) = &config.anthropic_api_key {
+        let client = AnthropicClient::new(api_key.clone());
+        match client
+            .summarize_with_context(&last_message, event_type, message)
+            .await
+        {
+            Ok(summary) => {
+                info!("Successfully generated summary");
+                Ok(summary)
+            }
+            Err(e) => {
+                error!("Failed to summarize with Anthropic: {}", e);
+                // Fallback based on event type
+                match event_type {
+                    "Notification" => Ok("Claude Code needs your attention".to_string()),
+                    _ => Ok(truncate_message(&last_message)),
+                }
+            }
+        }
+    } else {
+        info!("No Anthropic API key configured, using simple message");
+        match event_type {
+            "Notification" => Ok("Claude Code needs your attention".to_string()),
+            _ => Ok(truncate_message(&last_message)),
+        }
     }
 }
 

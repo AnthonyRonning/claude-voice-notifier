@@ -13,20 +13,13 @@ TRANSCRIPT_PATH=$(echo "$HOOK_DATA" | grep -o '"transcript_path":"[^"]*"' | cut 
 echo "[$(date)] Stop hook triggered" >> ~/.config/voice-notifier/hook.log
 echo "Transcript path: $TRANSCRIPT_PATH" >> ~/.config/voice-notifier/hook.log
 
-# If we have a transcript path, get the last assistant message
+# If we have a transcript path, process it
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    # Get the last assistant message from the JSONL file
-    # Each line is a JSON object, we want the last one with role="assistant"
-    LAST_ASSISTANT_MSG=$(grep '"role":"assistant"' "$TRANSCRIPT_PATH" | tail -1)
-    
-    if [ -n "$LAST_ASSISTANT_MSG" ]; then
-        # For now, just play a simple notification
-        # TODO: Extract text and summarize
-        # Use the compiled binary instead of cargo run for reliability
-        /Users/tony/Dev/Personal/voice-notifier/target/debug/voice-notifier \
-            -s "Claude has finished the task" 2>&1 >> ~/.config/voice-notifier/hook.log || \
-        echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
-    fi
+    # Use the compiled binary to process the transcript
+    # The binary will handle parsing, summarization, and TTS
+    /Users/tony/Dev/Personal/voice-notifier/target/debug/voice-notifier \
+        --transcript "$TRANSCRIPT_PATH" 2>&1 >> ~/.config/voice-notifier/hook.log || \
+    echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
 fi
 
 # Return decision to approve Claude to stop

@@ -5,7 +5,8 @@
       "Bash(cargo:*)",
       "Bash(ls:*)",
       "Bash(RUST_LOG=voice_notifier=debug cargo run -- -s \"Testing multilingual model\")",
-      "WebFetch(domain:docs.anthropic.com)"
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(git add:*)"
     ],
     "deny": []
   },

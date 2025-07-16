@@ -15,6 +15,9 @@ pub struct Config {
 
     #[serde(default = "default_model_id")]
     pub eleven_labs_model_id: String,
+
+    #[serde(default)]
+    pub anthropic_api_key: Option<String>,
 }
 
 fn default_voice_id() -> String {
@@ -46,6 +49,7 @@ impl Config {
                 .unwrap_or_else(|_| default_cache_dir()),
             eleven_labs_model_id: std::env::var("ELEVEN_LABS_MODEL_ID")
                 .unwrap_or_else(|_| default_model_id()),
+            anthropic_api_key: std::env::var("ANTHROPIC_API_KEY").ok(),
         };
 
         Ok(config)

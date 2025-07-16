@@ -1,14 +1,19 @@
 use anyhow::Result;
 use clap::Parser;
+use std::path::PathBuf;
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
 
+mod anthropic;
 mod audio;
 mod config;
+mod transcript;
 mod tts;
 
+use anthropic::AnthropicClient;
 use audio::AudioPlayer;
 use config::Config;
+use transcript::extract_last_assistant_message;
 use tts::ElevenLabsClient;
 
 #[derive(Parser, Debug)]
@@ -28,6 +33,9 @@ struct Args {
 
     #[arg(long, help = "Keep temporary files for debugging")]
     keep_temp: bool,
+
+    #[arg(long, help = "Transcript file path from Claude")]
+    transcript: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -56,6 +64,15 @@ async fn main() -> Result<()> {
     } else if args.file.is_some() {
         // Just play the file, no TTS needed
         return player.play_audio_file(args.file.unwrap()).await;
+    } else if let Some(transcript_path) = args.transcript {
+        // Process transcript to get summary
+        match process_transcript(&config, &transcript_path).await {
+            Ok(summary) => summary,
+            Err(e) => {
+                error!("Failed to process transcript: {}", e);
+                "Claude has finished a task".to_string()
+            }
+        }
     } else {
         "Claude has finished a task".to_string()
     };
@@ -88,6 +105,57 @@ async fn main() -> Result<()> {
     player.say_text(&text).await?;
 
     Ok(())
+}
+
+async fn process_transcript(config: &Config, transcript_path: &PathBuf) -> Result<String> {
+    info!("Processing transcript from: {:?}", transcript_path);
+
+    // Extract the last assistant message
+    let last_message = extract_last_assistant_message(transcript_path)?;
+
+    // If we have an Anthropic API key, summarize the message
+    if let Some(api_key) = &config.anthropic_api_key {
+        let client = AnthropicClient::new(api_key.clone());
+        match client.summarize(&last_message).await {
+            Ok(summary) => {
+                info!("Successfully generated summary");
+                Ok(summary)
+            }
+            Err(e) => {
+                error!("Failed to summarize with Anthropic: {}", e);
+                // Fallback to a simple truncation
+                Ok(truncate_message(&last_message))
+            }
+        }
+    } else {
+        info!("No Anthropic API key configured, using simple truncation");
+        Ok(truncate_message(&last_message))
+    }
+}
+
+fn truncate_message(message: &str) -> String {
+    // Simple fallback: take first sentence or first 100 chars
+    let trimmed = message.trim();
+
+    // Try to find first sentence
+    if let Some(end) = trimmed.find(['.', '!', '?']) {
+        let sentence = &trimmed[..=end];
+        if sentence.len() <= 150 {
+            return sentence.to_string();
+        }
+    }
+
+    // Otherwise, truncate at word boundary
+    if trimmed.len() <= 100 {
+        trimmed.to_string()
+    } else {
+        let truncated = &trimmed[..100];
+        if let Some(last_space) = truncated.rfind(' ') {
+            format!("{}...", &truncated[..last_space])
+        } else {
+            format!("{truncated}...")
+        }
+    }
 }
 
 async fn generate_and_play_elevenlabs(

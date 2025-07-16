@@ -5,21 +5,22 @@ A Rust-based voice notification system for Claude Code completions, using Eleven
 
 ## Core Features
 
-### Phase 1: MVP
-- Simple CLI tool that plays voice notifications
-- ElevenLabs TTS integration for high-quality voices
-- Fallback to macOS `say` command if ElevenLabs fails
-- Basic "Task complete" notification
-- Configuration via `.env` file for API keys
+### Phase 1: MVP ✅ COMPLETED
+- ✅ Simple CLI tool that plays voice notifications
+- ✅ ElevenLabs TTS integration for high-quality voices
+- ✅ Fallback to macOS `say` command if ElevenLabs fails
+- ✅ Basic "Task complete" notification
+- ✅ Configuration via `.env` file for API keys
+- ✅ Claude Code Stop hook integration
 
-### Phase 2: Enhanced Notifications
+### Phase 2: Enhanced Notifications (IN PROGRESS)
+- 🔄 Parse Claude Code transcript to extract task information
+- 🔄 Summarize responses with Anthropic API
 - Detailed task completion messages
-- Parse Claude Code output to extract task information
 - Different notification types (success, error, warning)
 - Customizable voice selection
 
 ### Phase 3: Advanced Features
-- Claude Code hook integration
 - Custom message templates
 - Voice profile management
 - Notification history/logging

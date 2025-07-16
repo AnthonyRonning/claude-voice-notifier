@@ -7,14 +7,39 @@ Claude Code supports hooks that execute shell commands in response to events. Th
 Hooks are configured in Claude Code settings under the "hooks" section.
 
 ## Available Hook Types
-- `user-prompt-submit-hook`: Executes after user submits a prompt
+- `stop`: Executes when Claude finishes responding (this is what we use)
+- `user-prompt-submit-hook`: Executes after user submits a prompt  
 - `assistant-response-hook`: Executes after Claude responds
 - Other hooks may be available
+
+## Stop Hook Requirements
+**CRITICAL**: The Stop hook must return a JSON decision:
+```json
+{"decision": "approve"}
+```
+- Must use `"approve"` not `"allow"`
+- Must be valid JSON
+- Must use `#!/bin/sh` shebang (not `#!/bin/bash`)
 
 ## Hook Context
 When a hook executes, it receives:
 1. **Environment variables** with session context
 2. **JSON data via stdin** with the current message/response
+
+### Stop Hook JSON Input
+The Stop hook receives JSON with:
+```json
+{
+  "transcript_path": "/path/to/conversation.jsonl",
+  "other_fields": "..."
+}
+```
+
+The transcript file contains JSONL (one JSON per line) with messages:
+```json
+{"role": "user", "content": "User's message"}
+{"role": "assistant", "content": "Claude's response"}
+```
 
 ## Implementation Plan
 1. Parse the JSON input from stdin

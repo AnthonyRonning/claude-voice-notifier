@@ -11,7 +11,7 @@
 - [x] Error handling and logging with tracing
 - [x] Fallback system (ElevenLabs → cached → mac say)
 - [x] Claude Code Stop hook integration
-- [x] Fixed nix-shell temp directory issues
+- [x] Fixed nix-shell temp directory issues (documented in IMPLEMENTATION_NOTES.md)
 - [x] Create comprehensive README.md
 
 ## 🔧 Core Implementation

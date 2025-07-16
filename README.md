@@ -104,9 +104,12 @@ Claude Code → Stop Hook → voice-notifier
 
 ## Troubleshooting
 
-- **"wht?" error**: Usually a path issue with nix-shell temp directories
+- **"wht?" error**: Path issue with nix-shell temp directories - see [Implementation Notes](docs/IMPLEMENTATION_NOTES.md#1-nix-shell-temp-directory-issue-with-afplay)
 - **No sound**: Check your system volume and `.env` configuration
-- **Hook not triggering**: Verify the path in Claude Code settings
+- **Hook not triggering**: Verify the path in Claude Code settings and that it returns `{"decision": "approve"}`
+- **Hook script issues**: Must use `#!/bin/sh` (not bash) and absolute paths
+
+For detailed troubleshooting, see [Implementation Notes](docs/IMPLEMENTATION_NOTES.md).
 
 ## Development
 

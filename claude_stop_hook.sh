@@ -9,7 +9,7 @@ HOOK_DATA=$(cat)
 # Extract transcript path using jq (or simple grep/sed for now)
 TRANSCRIPT_PATH=$(echo "$HOOK_DATA" | grep -o '"transcript_path":"[^"]*"' | cut -d'"' -f4)
 
-# Debug logging
+# Debug logging (actual location: ~/.config/voice-notifier/hook.log)
 echo "[$(date)] Stop hook triggered" >> ~/.config/voice-notifier/hook.log
 echo "Transcript path: $TRANSCRIPT_PATH" >> ~/.config/voice-notifier/hook.log
 

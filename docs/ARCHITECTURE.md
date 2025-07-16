@@ -88,7 +88,9 @@ voice-notifier/
 ├── docs/
 │   ├── PROJECT_GOALS.md
 │   ├── ARCHITECTURE.md
-│   └── CLAUDE_HOOKS.md
+│   ├── CLAUDE_HOOKS.md
+│   ├── IMPLEMENTATION_NOTES.md
+│   └── MASTER_TODO.md
 ├── src/
 │   ├── main.rs
 │   ├── tts.rs

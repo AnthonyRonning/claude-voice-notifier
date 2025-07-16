@@ -4,70 +4,80 @@
 - [x] Create project documentation structure
 - [x] Set up Rust project with Cargo.toml
 - [x] Create Nix flake for development environment
+- [x] Basic Audio Playback Module (audio.rs)
+- [x] ElevenLabs TTS Integration (tts.rs)
+- [x] Configuration Module (config.rs)
+- [x] CLI Interface with clap
+- [x] Error handling and logging with tracing
+- [x] Fallback system (ElevenLabs → cached → mac say)
+- [x] Claude Code Stop hook integration
+- [x] Fixed nix-shell temp directory issues
+- [x] Create comprehensive README.md
 
 ## 🔧 Core Implementation
 
-### 1. Basic Audio Playback Module
-- [ ] Create `src/audio.rs` module
-- [ ] Implement `play_audio_file()` function using `mac afplay`
-- [ ] Handle command execution errors gracefully
-- [ ] Add async support with tokio::process
-- [ ] Test with provided `claude_has_finished.mp3`
-- [ ] Add logging for debugging audio playback issues
+### 1. Basic Audio Playback Module ✅ COMPLETED
+- [x] Create `src/audio.rs` module
+- [x] Implement `play_audio_file()` function using `mac afplay`
+- [x] Handle command execution errors gracefully
+- [x] Add async support with tokio::process
+- [x] Test with provided `claude_has_finished.mp3`
+- [x] Add logging for debugging audio playback issues
 
-### 2. ElevenLabs TTS Integration
-- [ ] Create `src/tts.rs` module
-- [ ] Define ElevenLabs API client structure
-- [ ] Implement authentication with API key from .env
-- [ ] Create `generate_speech()` function
-  - [ ] Accept text input
-  - [ ] Handle voice ID selection
-  - [ ] Stream audio response to temporary file
-  - [ ] Return file path or error
+### 2. ElevenLabs TTS Integration ✅ COMPLETED
+- [x] Create `src/tts.rs` module
+- [x] Define ElevenLabs API client structure
+- [x] Implement authentication with API key from .env
+- [x] Create `generate_speech()` function
+  - [x] Accept text input
+  - [x] Handle voice ID selection
+  - [x] Stream audio response to temporary file
+  - [x] Return file path or error
+- [x] Add comprehensive error types for API failures
 - [ ] Add retry logic with exponential backoff
 - [ ] Implement rate limiting awareness
-- [ ] Add comprehensive error types for API failures
 
-### 3. Fallback System
-- [ ] Create `src/fallback.rs` module
-- [ ] Implement fallback chain logic:
+### 3. Fallback System ✅ COMPLETED
+- [x] Implement fallback chain logic (in main.rs):
   1. Try ElevenLabs API
   2. Use cached audio if available
   3. Fall back to `mac say` command
-- [ ] Cache management:
-  - [ ] Create cache directory on first run
-  - [ ] Save successful ElevenLabs audio as default.mp3
-  - [ ] Verify cache file integrity
-  - [ ] Handle missing/corrupted cache files
-- [ ] Implement `mac say` wrapper
-  - [ ] Text-to-speech using system voice
-  - [ ] Handle voice selection if available
-  - [ ] Error handling for missing `say` command
+- [x] Cache management:
+  - [x] Create cache directory on first run
+  - [x] Save successful ElevenLabs audio as default.mp3
+  - [x] Handle missing/corrupted cache files
+- [x] Implement `mac say` wrapper (in audio.rs)
+  - [x] Text-to-speech using system voice
+  - [x] Error handling for missing `say` command
+- [ ] Verify cache file integrity
 
-### 4. Configuration Module
-- [ ] Create `src/config.rs`
-- [ ] Load environment variables from .env
-- [ ] Define configuration struct with:
-  - [ ] ElevenLabs API key
-  - [ ] Voice ID (with default)
-  - [ ] Cache directory path
-  - [ ] Log level
-  - [ ] Timeout settings
+### 4. Configuration Module ✅ COMPLETED
+- [x] Create `src/config.rs`
+- [x] Load environment variables from .env
+- [x] Define configuration struct with:
+  - [x] ElevenLabs API key
+  - [x] Voice ID (with default)
+  - [x] Cache directory path
+  - [x] Model ID configuration
+- [x] Provide sensible defaults
+- [ ] Log level configuration
+- [ ] Timeout settings
 - [ ] Validate configuration on load
-- [ ] Provide sensible defaults
 - [ ] Support config file override (future)
 
-### 5. CLI Interface
-- [ ] Create main.rs with clap argument parser
-- [ ] Define CLI arguments:
-  - [ ] `--message` / `-m`: Custom message text
-  - [ ] `--voice`: Override voice ID
-  - [ ] `--no-cache`: Skip cache, always use API
-  - [ ] `--fallback-only`: Test fallback behavior
-  - [ ] `--verbose` / `-v`: Enable debug logging
-- [ ] Implement main execution flow
+### 5. CLI Interface ✅ COMPLETED
+- [x] Create main.rs with clap argument parser
+- [x] Define CLI arguments:
+  - [x] `--text` / `-s`: Custom message text
+  - [x] `--file` / `-f`: Play audio file
+  - [x] `--test` / `-t`: Test mode
+  - [x] `--force-say`: Force fallback behavior
+  - [x] `--keep-temp`: Keep temp files for debugging
+- [x] Implement main execution flow
+- [x] Return appropriate exit codes
+- [ ] `--voice`: Override voice ID
+- [ ] `--verbose` / `-v`: Enable debug logging
 - [ ] Add graceful shutdown handling
-- [ ] Return appropriate exit codes
 
 ### 6. Error Handling & Logging
 - [ ] Set up tracing/logging infrastructure
@@ -88,13 +98,35 @@
   - [ ] Missing commands
 - [ ] Performance tests for cache hits
 
-### 8. Claude Code Hook Integration
-- [ ] Create `docs/CLAUDE_HOOKS.md`
-- [ ] Document hook configuration format
-- [ ] Provide example hook scripts
-- [ ] Test with real Claude Code hooks
-- [ ] Handle various message formats
-- [ ] Parse task completion details
+### 8. Claude Code Hook Integration ✅ COMPLETED
+- [x] Create `docs/CLAUDE_HOOKS.md`
+- [x] Document hook configuration format
+- [x] Create Stop hook script (claude_stop_hook.sh)
+- [x] Test with real Claude Code hooks
+- [x] Handle Stop hook JSON format
+- [x] Return proper approval decision
+- [ ] Parse task completion details from transcript
+
+## 🚧 Phase 2: Intelligent Summaries (IN PROGRESS)
+
+### 1. Transcript Parsing
+- [ ] Parse JSONL transcript file from Stop hook
+- [ ] Extract last assistant message content
+- [ ] Handle malformed JSON gracefully
+- [ ] Support streaming JSON input
+
+### 2. Anthropic API Integration
+- [ ] Add Anthropic Rust client dependency
+- [ ] Create summarizer module
+- [ ] Implement API authentication
+- [ ] Create prompt for one-sentence summaries
+- [ ] Handle API errors and rate limits
+
+### 3. Enhanced Hook Processing
+- [ ] Create Rust binary mode for JSON stdin
+- [ ] Extract and summarize Claude's responses
+- [ ] Generate contextual voice notifications
+- [ ] Cache summaries to avoid duplicate API calls
 
 ### 9. Advanced Features (Future)
 - [ ] Multiple voice profiles
@@ -105,10 +137,10 @@
 - [ ] Cross-platform support (Linux native audio)
 
 ## 📝 Documentation Tasks
-- [ ] Create comprehensive README.md
-- [ ] Add usage examples
-- [ ] Document all CLI options
-- [ ] Create troubleshooting guide
+- [x] Create comprehensive README.md
+- [x] Add usage examples
+- [x] Document all CLI options
+- [x] Create troubleshooting guide
 - [ ] Add contribution guidelines
 - [ ] Generate API documentation
 

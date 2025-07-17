@@ -13,6 +13,11 @@
 - [x] Claude Code Stop hook integration
 - [x] Fixed nix-shell temp directory issues (documented in IMPLEMENTATION_NOTES.md)
 - [x] Create comprehensive README.md
+- [x] Parse task completion details from transcript
+- [x] Anthropic API Integration (anthropic.rs)
+- [x] Transcript parsing module (transcript.rs)
+- [x] Support for both Stop and Notification hooks
+- [x] Context-aware summaries based on event type
 
 ## 🔧 Core Implementation
 
@@ -107,25 +112,27 @@
 - [x] Return proper approval decision
 - [ ] Parse task completion details from transcript
 
-## 🚧 Phase 2: Intelligent Summaries (IN PROGRESS)
+## ✅ Phase 2: Intelligent Summaries (COMPLETED)
 
-### 1. Transcript Parsing
-- [ ] Parse JSONL transcript file from Stop hook
-- [ ] Extract last assistant message content
-- [ ] Handle malformed JSON gracefully
-- [ ] Support streaming JSON input
+### 1. Transcript Parsing ✅ COMPLETED
+- [x] Parse JSONL transcript file from Stop hook
+- [x] Extract last assistant message content
+- [x] Handle malformed JSON gracefully
+- [x] Support for reading line-by-line JSONL format
 
-### 2. Anthropic API Integration
-- [ ] Add Anthropic Rust client dependency
-- [ ] Create summarizer module
-- [ ] Implement API authentication
-- [ ] Create prompt for one-sentence summaries
-- [ ] Handle API errors and rate limits
+### 2. Anthropic API Integration ✅ COMPLETED
+- [x] Add Anthropic API client (custom implementation)
+- [x] Create summarizer module (anthropic.rs)
+- [x] Implement API authentication with Claude 4 Sonnet
+- [x] Create prompt for one-sentence summaries
+- [x] Handle API errors with fallback to truncation
 
-### 3. Enhanced Hook Processing
-- [ ] Create Rust binary mode for JSON stdin
-- [ ] Extract and summarize Claude's responses
-- [ ] Generate contextual voice notifications
+### 3. Enhanced Hook Processing ✅ COMPLETED
+- [x] Support both Stop and Notification hooks
+- [x] Extract and summarize Claude's responses
+- [x] Generate contextual voice notifications
+- [x] Pass hook event type and message to binary
+- [x] Context-aware prompts for different event types
 - [ ] Cache summaries to avoid duplicate API calls
 
 ### 9. Advanced Features (Future)

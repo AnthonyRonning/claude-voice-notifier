@@ -13,12 +13,14 @@ A Rust-based voice notification system for Claude Code completions, using Eleven
 - ✅ Configuration via `.env` file for API keys
 - ✅ Claude Code Stop hook integration
 
-### Phase 2: Enhanced Notifications (IN PROGRESS)
-- 🔄 Parse Claude Code transcript to extract task information
-- 🔄 Summarize responses with Anthropic API
-- Detailed task completion messages
-- Different notification types (success, error, warning)
-- Customizable voice selection
+### Phase 2: Enhanced Notifications ✅ COMPLETED
+- ✅ Parse Claude Code transcript to extract task information
+- ✅ Summarize responses with Anthropic API (Claude 4 Sonnet)
+- ✅ Detailed task completion messages with intelligent summaries
+- ✅ Different notification types (Stop event, Notification event)
+- ✅ Support for both completion and idle notifications
+- ✅ Context-aware summaries based on event type
+- Customizable voice selection (partial - voice ID configurable)
 
 ### Phase 3: Advanced Features
 - Custom message templates

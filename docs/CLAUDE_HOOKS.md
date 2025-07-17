@@ -7,13 +7,14 @@ Claude Code supports hooks that execute shell commands in response to events. Th
 Hooks are configured in Claude Code settings under the "hooks" section.
 
 ## Available Hook Types
-- `stop`: Executes when Claude finishes responding (this is what we use)
+- `Stop`: Executes when Claude finishes responding
+- `Notification`: Executes when Claude needs permission or after 60 seconds of idle time
 - `user-prompt-submit-hook`: Executes after user submits a prompt  
 - `assistant-response-hook`: Executes after Claude responds
 - Other hooks may be available
 
-## Stop Hook Requirements
-**CRITICAL**: The Stop hook must return a JSON decision:
+## Hook Requirements
+**CRITICAL**: Both Stop and Notification hooks must return a JSON decision:
 ```json
 {"decision": "approve"}
 ```
@@ -26,14 +27,21 @@ When a hook executes, it receives:
 1. **Environment variables** with session context
 2. **JSON data via stdin** with the current message/response
 
-### Stop Hook JSON Input
-The Stop hook receives JSON with:
+### Hook JSON Input
+Both hooks receive JSON with:
 ```json
 {
   "transcript_path": "/path/to/conversation.jsonl",
-  "other_fields": "..."
+  "hook_event_name": "Stop" | "Notification",
+  "message": "Optional message (for Notification hook)",
+  "session_id": "unique-session-identifier"
 }
 ```
+
+### Notification Hook Triggers
+The Notification hook triggers in two scenarios:
+1. **Permission Required**: When Claude needs permission to use a tool (message: "Claude needs your permission to use [tool]")
+2. **Idle Timeout**: When the prompt input has been idle for 60+ seconds (message: "Claude is waiting for your input")
 
 The transcript file contains JSONL (one JSON per line) with messages:
 ```json
@@ -41,14 +49,33 @@ The transcript file contains JSONL (one JSON per line) with messages:
 {"role": "assistant", "content": "Claude's response"}
 ```
 
-## Implementation Plan
+## Implementation
+The voice notifier now supports both hooks:
+
+### Stop Hook Flow
 1. Parse the JSON input from stdin
-2. Extract Claude's response text
-3. Use Anthropic API to summarize the response
+2. Extract Claude's last response from transcript
+3. Use Claude 4 Sonnet to summarize what was completed
 4. Generate speech with ElevenLabs
 5. Play the summary audio
 
-## Required Features
-- JSON parsing for hook input
-- Anthropic API client for summarization
-- Integration with existing TTS system
+### Notification Hook Flow
+1. Parse the JSON input from stdin
+2. Extract Claude's current context from transcript
+3. Use Claude 4 Sonnet to summarize what Claude needs/is waiting for
+4. Generate speech with ElevenLabs
+5. Play the context-aware notification
+
+### Context-Aware Summaries
+The summarizer uses different prompts based on the event type:
+- **Stop events**: Focus on what Claude completed
+- **Notification events**: Focus on what Claude needs or is waiting for
+
+## Implemented Features
+- ✅ JSON parsing for hook input
+- ✅ Anthropic API client for summarization (Claude 4 Sonnet)
+- ✅ Integration with existing TTS system
+- ✅ Support for both Stop and Notification hooks
+- ✅ Context-aware summaries based on event type
+- ✅ Fallback to simple messages when transcript unavailable
+- ✅ Automatic loading of environment variables from .env

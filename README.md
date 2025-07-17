@@ -13,12 +13,14 @@ A Rust-based voice notification system for Claude Code that provides intelligent
 
 ## How It Works
 
-1. When Claude Code finishes a task, the stop hook triggers
+1. When Claude Code finishes a task or needs attention, hooks trigger:
+   - **Stop Hook**: When Claude completes a response
+   - **Notification Hook**: When permission is needed or after 60s idle
 2. The voice notifier reads Claude's transcript (JSONL format)
 3. Extracts the last assistant message
 4. Sends it to Claude 4 Sonnet for intelligent summarization
 5. Converts the summary to speech using ElevenLabs
-6. Plays the audio notification
+6. Plays the audio notification with context-aware message
 
 ## Prerequisites
 
@@ -85,6 +87,8 @@ cargo run -- --transcript /path/to/transcript.jsonl
 - `-f, --file <FILE>`: Audio file to play
 - `--test`: Test mode with default notification
 - `--transcript <PATH>`: Process a Claude transcript file
+- `--hook-event <TYPE>`: Hook event type (Stop or Notification)
+- `--hook-message <MSG>`: Optional message from hook
 - `--force-say`: Force use of macOS say command
 - `--keep-temp`: Keep temporary files for debugging
 

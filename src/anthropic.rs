@@ -64,7 +64,9 @@ impl AnthropicClient {
                     String::new()
                 };
 
-                format!("You are a voice notification assistant for Claude Code, an AI coding assistant. Claude Code needs the user's attention.{}
+                format!("You are a voice notification assistant for Claude Code, an AI coding assistant. Claude Code needs the user's attention.
+
+                {notification_context}
 
 Your summary should:
 - ALWAYS start with 'Claude Code' as the subject
@@ -76,10 +78,11 @@ Your summary should:
 
 Examples:
 - 'Claude Code needs your permission to run npm install for the React project dependencies.'
-- 'Claude Code has been idle for 60 seconds while implementing the authentication module and is waiting for your next instruction.'
+- 'Claude Code has implemented the authentication module and is waiting for your next instruction.'
+- 'Claude Code is asking for clarification on some of your new tool calling feature requirements.'
 - 'Claude Code requires your approval to execute the database migration script.'
 
-Do not include any preamble, explanation, or quotes - just the summary sentence starting with 'Claude Code'.", notification_context)
+Do not include any preamble, explanation, or quotes - just the summary sentence starting with 'Claude Code'.")
             }
             _ => {
                 // Default Stop event prompt

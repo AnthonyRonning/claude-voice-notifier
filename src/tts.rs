@@ -50,7 +50,20 @@ impl ElevenLabsClient {
     }
 
     pub async fn generate_speech(&self, text: &str, output_path: &Path) -> Result<()> {
-        info!("Generating speech with ElevenLabs for text: {}", text);
+        const MAX_TTS_LENGTH: usize = 1000;
+        
+        let truncated_text = if text.len() > MAX_TTS_LENGTH {
+            info!(
+                "Text too long ({} chars), truncating to {} chars",
+                text.len(),
+                MAX_TTS_LENGTH
+            );
+            format!("{}...", &text[..MAX_TTS_LENGTH])
+        } else {
+            text.to_string()
+        };
+        
+        info!("Generating speech with ElevenLabs for text: {}", truncated_text);
 
         let url = format!(
             "https://api.elevenlabs.io/v1/text-to-speech/{}",
@@ -58,7 +71,7 @@ impl ElevenLabsClient {
         );
 
         let request_body = TextToSpeechRequest {
-            text: text.to_string(),
+            text: truncated_text,
             model_id: self.model_id.clone(),
             voice_settings: VoiceSettings::default(),
         };

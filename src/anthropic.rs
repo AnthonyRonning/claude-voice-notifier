@@ -75,6 +75,8 @@ Your summary should:
 - If it's waiting for permission, mention what command it wants to run
 - If it's been idle, mention what it was last working on
 - Be natural when spoken aloud
+- NEVER include code snippets, file contents, or technical implementation details
+- Focus on the high-level task or action, not the specific code
 
 Examples:
 - 'Claude Code needs your permission to run npm install for the React project dependencies.'
@@ -96,6 +98,8 @@ Your summary should:
 - Use past tense to indicate completion
 - Be natural when spoken aloud
 - If Claude asked questions or needs clarification, summarize that instead (e.g., 'Claude Code has questions about...')
+- NEVER include code blocks, file contents, or raw code output
+- If Claude generated code, just mention what type of code or feature, not the actual code
 
 Examples of good summaries:
 - 'Claude Code successfully implemented the Anthropic API client module, created a transcript parser for JSONL files, and integrated text-to-speech notifications with ElevenLabs.'

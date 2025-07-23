@@ -46,16 +46,14 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # Always process the transcript when available
     case "$HOOK_EVENT_NAME" in
         "Stop")
-            # For Stop hook, process normally
-            "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" 2>&1 >> ~/.config/voice-notifier/hook.log || \
-            echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
+            # For Stop hook, process normally (run in background)
+            nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         "Notification")
-            # For Notification hook, process transcript with event context
+            # For Notification hook, process transcript with event context (run in background)
             # The summarizer can then provide context about what Claude was doing when it needs attention
-            "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" 2>&1 >> ~/.config/voice-notifier/hook.log || \
-            echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
+            nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         *)
@@ -66,13 +64,11 @@ else
     # Fallback if no transcript is available
     case "$HOOK_EVENT_NAME" in
         "Stop")
-            "$BINARY" -s "Claude Code has finished the task" 2>&1 >> ~/.config/voice-notifier/hook.log || \
-            echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
+            nohup "$BINARY" -s "Claude Code has finished the task" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         "Notification")
-            "$BINARY" -s "Claude Code needs your attention" 2>&1 >> ~/.config/voice-notifier/hook.log || \
-            echo "Failed to run voice notifier" >> ~/.config/voice-notifier/hook.log
+            nohup "$BINARY" -s "Claude Code needs your attention" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         *)

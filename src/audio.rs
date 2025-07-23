@@ -42,6 +42,26 @@ impl AudioPlayer {
         }
     }
 
+    pub async fn play_audio_file_background(&self, file_path: impl AsRef<Path>) -> Result<()> {
+        let path = file_path.as_ref();
+
+        if !path.exists() {
+            return Err(anyhow::anyhow!("Audio file not found: {}", path.display()));
+        }
+
+        info!("Playing audio file in background: {}", path.display());
+
+        // Spawn the audio player process without waiting for it
+        Command::new("mac")
+            .arg("afplay")
+            .arg(path)
+            .spawn()
+            .context("Failed to spawn 'mac afplay' command")?;
+
+        debug!("Audio playback started in background");
+        Ok(())
+    }
+
     #[allow(dead_code)]
     pub async fn play_with_fallback(
         &self,
@@ -75,6 +95,19 @@ impl AudioPlayer {
             let stderr = String::from_utf8_lossy(&output.stderr);
             Err(anyhow::anyhow!("say command failed: {}", stderr))
         }
+    }
+
+    pub async fn say_text_background(&self, text: &str) -> Result<()> {
+        info!("Using macOS 'say' command in background for text: {}", text);
+
+        Command::new("mac")
+            .arg("say")
+            .arg(text)
+            .spawn()
+            .context("Failed to spawn 'mac say' command")?;
+
+        debug!("Text-to-speech started in background");
+        Ok(())
     }
 }
 

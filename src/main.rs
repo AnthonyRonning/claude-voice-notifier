@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 mod anthropic;
@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
         text
     } else if args.file.is_some() {
         // Just play the file, no TTS needed
-        return player.play_audio_file(args.file.unwrap()).await;
+        return player.play_audio_file_background(args.file.unwrap()).await;
     } else if let Some(transcript_path) = args.transcript {
         // Process transcript to get summary
         if let Some(event_type) = &args.hook_event {
@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
         let cache_file = config.cache_dir.join("default.mp3");
         if cache_file.exists() {
             info!("Using cached audio file");
-            match player.play_audio_file(&cache_file).await {
+            match player.play_audio_file_background(&cache_file).await {
                 Ok(_) => return Ok(()),
                 Err(e) => error!("Failed to play cached audio: {}", e),
             }
@@ -129,7 +129,7 @@ async fn main() -> Result<()> {
 
     // Final fallback: mac say
     info!("Using mac say as final fallback");
-    player.say_text(&text).await?;
+    player.say_text_background(&text).await?;
 
     Ok(())
 }
@@ -249,8 +249,10 @@ async fn generate_and_play_elevenlabs(
         let debug_path = std::env::current_dir()?.join("debug_audio.mp3");
         info!("Saving debug audio to: {}", debug_path.display());
         client.generate_speech(text, &debug_path).await?;
-        match player.play_audio_file(&debug_path).await {
-            Ok(_) => {}
+        match player.play_audio_file_background(&debug_path).await {
+            Ok(_) => {
+                info!("Audio playing in background, debug file saved at: {}", debug_path.display());
+            }
             Err(e) => {
                 error!("Failed to play audio: {}", e);
                 info!("Debug file saved at: {}", debug_path.display());
@@ -266,14 +268,12 @@ async fn generate_and_play_elevenlabs(
             .join(format!("temp_voice_notifier_{}.mp3", std::process::id()));
 
         client.generate_speech(text, &temp_path).await?;
-        let result = player.play_audio_file(&temp_path).await;
-
-        // Clean up temp file
-        if let Err(e) = tokio::fs::remove_file(&temp_path).await {
-            debug!("Failed to remove temp file: {}", e);
-        }
-
-        result?;
+        
+        // Play audio in background - don't wait for completion
+        player.play_audio_file_background(&temp_path).await?;
+        
+        // Don't clean up temp file immediately since audio is playing in background
+        // The OS will clean it up eventually from the temp directory
         temp_path
     };
 

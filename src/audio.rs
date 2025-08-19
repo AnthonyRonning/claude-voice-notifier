@@ -114,6 +114,12 @@ impl AudioPlayer {
             return Err(anyhow::anyhow!("Audio file not found: {}", path.display()));
         }
 
+        // Check RIGHT before spawning the audio process
+        if self.is_audio_playing().await {
+            info!("Audio already playing, skipping notification");
+            return Ok(());
+        }
+
         info!("Playing audio file in background: {}", path.display());
 
         // Spawn the audio player process without waiting for it
@@ -163,6 +169,12 @@ impl AudioPlayer {
     }
 
     pub async fn say_text_background(&self, text: &str) -> Result<()> {
+        // Check RIGHT before spawning the say process
+        if self.is_audio_playing().await {
+            info!("Audio already playing, skipping notification");
+            return Ok(());
+        }
+
         info!("Using macOS 'say' command in background for text: {}", text);
 
         Command::new("mac")

@@ -143,6 +143,59 @@
 - [ ] Support for other TTS providers
 - [ ] Cross-platform support (Linux native audio)
 
+### 10. Concurrent Notification Handling (Future Enhancement)
+**Alternative approaches for preventing simultaneous voice notifications:**
+
+#### Queue System Approach:
+- Implement a notification daemon that manages a queue
+- Each notification request adds to the queue instead of playing immediately
+- Daemon processes queue sequentially, ensuring only one plays at a time
+- Benefits: No missed notifications, controlled playback order
+- Drawbacks: More complex architecture, requires daemon process
+
+#### Cooldown Period Approach:
+- Implement a time-based cooldown after each notification
+- Ignore or defer notifications within X seconds of the last one
+- Could be configurable (e.g., 2-5 second cooldown)
+- Benefits: Simple to implement, prevents rapid-fire notifications
+- Drawbacks: Might miss important notifications during cooldown
+
+### 11. Audio Ducking / Music App Control (Future Enhancement)
+**Research completed on music app control during playback:**
+
+#### Findings:
+- System volume ducking affects ALL audio (including the notification) - not viable
+- Apple Music supports AppleScript volume control: `set sound volume to 20`
+- Spotify supports AppleScript volume control (when running)
+- Amperfy only supports pause/play via UI automation, not volume control
+
+#### Implementation Options:
+1. **App-specific pause/resume (works for Amperfy)**
+   ```bash
+   # Pause
+   mac osascript -e 'tell application "System Events" to tell process "Amperfy" to click menu item "Pause" of menu "Controls" of menu bar 1'
+   # Resume
+   mac osascript -e 'tell application "System Events" to tell process "Amperfy" to click menu item "Play" of menu "Controls" of menu bar 1'
+   ```
+
+2. **App-specific volume control (Apple Music/Spotify)**
+   ```bash
+   # Lower volume
+   mac osascript -e 'tell application "Music" to set sound volume to 20'
+   # Restore volume
+   mac osascript -e 'tell application "Music" to set sound volume to 100'
+   ```
+
+3. **Virtual audio driver approach**
+   - Use tools like BackgroundMusic for per-app volume control
+   - Requires system-level audio driver installation
+
+#### Recommended Approach:
+- Detect running music apps
+- Use volume control for Apple Music/Spotify
+- Use pause/resume for Amperfy and unsupported apps
+- Make it configurable (some users may prefer pause vs duck)
+
 ## 📝 Documentation Tasks
 - [x] Create comprehensive README.md
 - [x] Add usage examples

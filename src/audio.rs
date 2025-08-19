@@ -16,6 +16,71 @@ impl AudioPlayer {
         Self
     }
 
+    pub async fn is_audio_playing(&self) -> bool {
+        debug!("Checking if audio is already playing...");
+        
+        // Check for running mac process (both afplay and say use this)
+        let mac_check = Command::new("pgrep")
+            .args(&["-x", "mac"])
+            .output()
+            .await;
+
+        match mac_check {
+            Ok(result) => {
+                // pgrep returns 0 if processes found, 1 if not found
+                if result.status.success() {
+                    // Now check if it's specifically an audio-related mac process
+                    let ps_output = Command::new("ps")
+                        .args(&["aux"])
+                        .output()
+                        .await;
+                    
+                    if let Ok(ps_result) = ps_output {
+                        let stdout = String::from_utf8_lossy(&ps_result.stdout);
+                        // Check if mac is running with afplay or say
+                        if stdout.contains("mac afplay") || stdout.contains("mac say") {
+                            info!("Audio processes detected, skipping notification");
+                            return true;
+                        }
+                    }
+                    debug!("mac process found but not audio-related");
+                    false
+                } else {
+                    debug!("No mac processes found via pgrep");
+                    false
+                }
+            }
+            Err(e) => {
+                // If pgrep fails, try alternative method
+                debug!("pgrep failed: {}, trying ps", e);
+                self.check_audio_with_ps().await
+            }
+        }
+    }
+
+    async fn check_audio_with_ps(&self) -> bool {
+        let output = Command::new("ps")
+            .args(&["aux"])
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                let stdout = String::from_utf8_lossy(&result.stdout);
+                let has_audio = stdout.contains("mac afplay") || stdout.contains("mac say");
+                if has_audio {
+                    info!("Audio processes detected via ps, skipping notification");
+                }
+                has_audio
+            }
+            Err(e) => {
+                debug!("Failed to check for audio processes: {}", e);
+                // If we can't check, allow playback to avoid blocking notifications entirely
+                false
+            }
+        }
+    }
+
     pub async fn play_audio_file(&self, file_path: impl AsRef<Path>) -> Result<()> {
         let path = file_path.as_ref();
 

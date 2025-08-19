@@ -57,6 +57,12 @@ async fn main() -> Result<()> {
     let config = Config::from_env()?;
     let player = AudioPlayer::new();
 
+    // Check if audio is already playing before doing anything
+    if player.is_audio_playing().await {
+        info!("Audio already playing, skipping this notification");
+        return Ok(());
+    }
+
     // Ensure cache directory exists
     if let Err(e) = config.ensure_cache_dir() {
         error!("Failed to create cache directory: {}", e);

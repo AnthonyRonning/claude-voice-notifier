@@ -1,7 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
-use tracing::{error, info};
+use std::fs;
+use std::time::{SystemTime, Duration};
+use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
 
 mod anthropic;
@@ -15,6 +17,17 @@ use audio::AudioPlayer;
 use config::Config;
 use transcript::extract_last_assistant_message;
 use tts::ElevenLabsClient;
+
+// Simple RAII lock guard that removes the lock file when dropped
+struct LockGuard {
+    path: PathBuf,
+}
+
+impl Drop for LockGuard {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -61,6 +74,38 @@ async fn main() -> Result<()> {
     if let Err(e) = config.ensure_cache_dir() {
         error!("Failed to create cache directory: {}", e);
     }
+
+    // Check for active notification lock
+    let lock_file = config.cache_dir.join("notification.lock");
+    debug!("Checking for lock file at: {:?}", lock_file);
+    if lock_file.exists() {
+        debug!("Lock file exists, checking age");
+        // Check if lock is stale (older than 30 seconds)
+        if let Ok(metadata) = fs::metadata(&lock_file) {
+            if let Ok(modified) = metadata.modified() {
+                if let Ok(elapsed) = SystemTime::now().duration_since(modified) {
+                    if elapsed < Duration::from_secs(30) {
+                        info!("Another notification is in progress (lock age: {:?}), skipping", elapsed);
+                        return Ok(());
+                    } else {
+                        debug!("Removing stale lock file (age: {:?})", elapsed);
+                        let _ = fs::remove_file(&lock_file);
+                    }
+                }
+            }
+        }
+    } else {
+        debug!("No lock file found");
+    }
+
+    // Create lock file
+    if let Err(e) = fs::write(&lock_file, std::process::id().to_string()) {
+        error!("Failed to create lock file: {}", e);
+        // Continue anyway, as this shouldn't block notifications entirely
+    }
+
+    // Ensure lock file is removed on exit
+    let _lock_guard = LockGuard { path: lock_file };
 
     let text = if args.test {
         info!("Running in test mode");

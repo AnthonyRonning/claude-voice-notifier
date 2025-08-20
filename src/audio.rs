@@ -92,6 +92,8 @@ impl AudioPlayer {
 
         let output = Command::new("mac")
             .arg("afplay")
+            .arg("-v")
+            .arg("0.5")  // 50% volume
             .arg(path)
             .output()
             .await
@@ -123,8 +125,11 @@ impl AudioPlayer {
         info!("Playing audio file in background: {}", path.display());
 
         // Spawn the audio player process without waiting for it
+        // -v flag sets volume (0.0 to 1.0, default is 1.0)
         Command::new("mac")
             .arg("afplay")
+            .arg("-v")
+            .arg("0.5")  // 50% volume
             .arg(path)
             .spawn()
             .context("Failed to spawn 'mac afplay' command")?;
@@ -177,6 +182,9 @@ impl AudioPlayer {
 
         info!("Using macOS 'say' command in background for text: {}", text);
 
+        // Note: 'say' command doesn't have a volume flag, but we can use
+        // osascript to control system volume or use [[volm 0.5]] SSML tag
+        // For now, using say without volume control as fallback
         Command::new("mac")
             .arg("say")
             .arg(text)

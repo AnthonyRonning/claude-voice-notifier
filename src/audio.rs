@@ -173,6 +173,40 @@ impl AudioPlayer {
         }
     }
 
+    pub async fn is_system_muted(&self) -> bool {
+        debug!("Checking if system is muted...");
+
+        // Use osascript to check if output is muted
+        let output = Command::new("osascript")
+            .arg("-e")
+            .arg("output muted of (get volume settings)")
+            .output()
+            .await;
+
+        match output {
+            Ok(result) => {
+                if result.status.success() {
+                    let stdout = String::from_utf8_lossy(&result.stdout).trim().to_string();
+                    let is_muted = stdout == "true";
+                    if is_muted {
+                        info!("System is muted");
+                    } else {
+                        debug!("System is not muted");
+                    }
+                    is_muted
+                } else {
+                    debug!("osascript command failed");
+                    false
+                }
+            }
+            Err(e) => {
+                debug!("Failed to check mute status: {}", e);
+                // If we can't check, assume not muted to avoid blocking notifications
+                false
+            }
+        }
+    }
+
     pub async fn say_text_background(&self, text: &str) -> Result<()> {
         // Check RIGHT before spawning the say process
         if self.is_audio_playing().await {

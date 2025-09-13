@@ -107,6 +107,12 @@ async fn main() -> Result<()> {
     // Ensure lock file is removed on exit
     let _lock_guard = LockGuard { path: lock_file };
 
+    // Check if system is muted before processing text notifications
+    if player.is_system_muted().await {
+        info!("System is muted, skipping voice notification to avoid charges");
+        return Ok(());
+    }
+
     let text = if args.test {
         info!("Running in test mode");
         "Claude has finished a task".to_string()

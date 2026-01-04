@@ -6,21 +6,13 @@
       "Bash(ls:*)",
       "Bash(RUST_LOG=voice_notifier=debug cargo run -- -s \"Testing multilingual model\")",
       "WebFetch(domain:docs.anthropic.com)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/tony/Dev/Personal/voice-notifier/claude_stop_hook.sh"
-          }
-        ]
-      }
-    ]
   }
 }

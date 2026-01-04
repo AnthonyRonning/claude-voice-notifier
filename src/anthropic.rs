@@ -64,57 +64,48 @@ impl AnthropicClient {
                     String::new()
                 };
 
-                format!("You are a voice notification assistant for Claude Code, an AI coding assistant. Claude Code needs the user's attention.
+                format!("You are a voice notification assistant. Generate a human-readable summary for voice notification.
 
                 {notification_context}
 
-Your summary should:
-- ALWAYS start with 'Claude Code' as the subject
-- Be exactly one sentence
-- Explain what Claude was working on when it needed attention
-- If it's waiting for permission, mention what command it wants to run
-- If it's been idle, mention what it was last working on
-- Be natural when spoken aloud
-- NEVER include code snippets, file contents, or technical implementation details
-- Focus on the high-level task or action, not the specific code
+CRITICAL RULES:
+1. Output EXACTLY 1-2 sentences maximum. NO MORE.
+2. Must start with 'Claude Code'
+3. Use plain English only - absolutely NO code, NO technical syntax, NO file paths, NO command lines
+4. Make it conversational and natural for speech
+5. Focus on WHAT is happening, not HOW
 
 Examples:
-- 'Claude Code needs your permission to run npm install for the React project dependencies.'
-- 'Claude Code has implemented the authentication module and is waiting for your next instruction.'
-- 'Claude Code is asking for clarification on some of your new tool calling feature requirements.'
-- 'Claude Code requires your approval to execute the database migration script.'
+- 'Claude Code needs your permission to install project dependencies.'
+- 'Claude Code is waiting for you to approve running a database command.'
+- 'Claude Code has a question about the authentication feature.'
 
-Do not include any preamble, explanation, or quotes - just the summary sentence starting with 'Claude Code'.")
+OUTPUT ONLY THE SUMMARY. NO EXPLANATIONS. NO CODE.")
             }
             _ => {
                 // Default Stop event prompt
-                "You are a voice notification assistant for Claude Code, an AI coding assistant. When Claude Code finishes helping with a task, you summarize what was accomplished in a clear, informative sentence that will be read aloud as a voice notification.
+                "You are a voice notification assistant. Generate a human-readable summary of what was accomplished.
 
-Your summary should:
-- ALWAYS start with 'Claude Code' as the subject
-- Be exactly one sentence (can be compound with commas if needed)
-- Focus on what Claude actually DID or COMPLETED (not what it said it would do)
-- Include specific details like: files created/modified, features implemented, bugs fixed, configurations changed
-- Use past tense to indicate completion
-- Be natural when spoken aloud
-- If Claude asked questions or needs clarification, summarize that instead (e.g., 'Claude Code has questions about...')
-- NEVER include code blocks, file contents, or raw code output
-- If Claude generated code, just mention what type of code or feature, not the actual code
+CRITICAL RULES:
+1. Output EXACTLY 1-2 sentences maximum. NO MORE.
+2. Must start with 'Claude Code'
+3. Use plain English only - absolutely NO code, NO technical syntax, NO file paths, NO variable names
+4. Make it conversational and natural for speech
+5. Focus on WHAT was done in simple terms, not HOW
 
-Examples of good summaries:
-- 'Claude Code successfully implemented the Anthropic API client module, created a transcript parser for JSONL files, and integrated text-to-speech notifications with ElevenLabs.'
-- 'Claude Code fixed the authentication bug in login.tsx by updating the JWT token validation and added proper error handling.'
-- 'Claude Code refactored the database queries to use prepared statements and added indexes to improve performance by 40 percent.'
-- 'Claude Code has a few questions about the notification preferences you'd like for the voice assistant feature.'
-- 'Claude Code encountered an error while running tests and needs your help to resolve the failing authentication module.'
+Examples:
+- 'Claude Code fixed the login bug and added better error handling. The authentication system is now working properly.'
+- 'Claude Code implemented the new search feature you requested.'
+- 'Claude Code updated the database configuration to improve performance.'
+- 'Claude Code has questions about the requirements for the payment system.'
 
-Do not include any preamble, explanation, or quotes - just the summary sentence starting with 'Claude Code'.".to_string()
+OUTPUT ONLY THE SUMMARY. NO EXPLANATIONS. NO CODE.".to_string()
             }
         };
 
         let request = AnthropicRequest {
             model: "claude-sonnet-4-20250514".to_string(),
-            max_tokens: 1000,
+            max_tokens: 100,
             messages: vec![Message {
                 role: "user".to_string(),
                 content: text.to_string(),

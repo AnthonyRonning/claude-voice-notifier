@@ -51,9 +51,15 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
             ;;
         
         "Notification")
-            # For Notification hook, process transcript with event context (run in background)
-            # The summarizer can then provide context about what Claude was doing when it needs attention
-            nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            # Skip idle timeout notifications (already handled by Stop hook)
+            # Only process actual permission requests
+            if [ -z "$MESSAGE" ] || [ "$MESSAGE" = "Claude is waiting for your input" ]; then
+                echo "Skipping idle timeout notification (already notified by Stop hook)" >> ~/.config/voice-notifier/hook.log
+            else
+                # For Notification hook with actual permission request, process transcript with event context
+                echo "Processing permission request: $MESSAGE" >> ~/.config/voice-notifier/hook.log
+                nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            fi
             ;;
         
         *)
@@ -68,7 +74,12 @@ else
             ;;
         
         "Notification")
-            nohup "$BINARY" -s "Claude Code needs your attention" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            # Skip idle timeout notifications (already handled by Stop hook)
+            if [ -z "$MESSAGE" ] || [ "$MESSAGE" = "Claude is waiting for your input" ]; then
+                echo "Skipping idle timeout notification (already notified by Stop hook)" >> ~/.config/voice-notifier/hook.log
+            else
+                nohup "$BINARY" -s "Claude Code needs your attention" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            fi
             ;;
         
         *)

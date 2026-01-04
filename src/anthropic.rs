@@ -40,8 +40,8 @@ impl AnthropicClient {
         }
     }
 
-    pub async fn summarize(&self, text: &str) -> Result<String> {
-        self.summarize_with_context(text, "Stop", None).await
+    pub async fn summarize(&self, text: &str, agent_name: &str) -> Result<String> {
+        self.summarize_with_context(text, "Stop", None, agent_name).await
     }
 
     pub async fn summarize_with_context(
@@ -49,6 +49,7 @@ impl AnthropicClient {
         text: &str,
         event_type: &str,
         message: Option<&str>,
+        agent_name: &str,
     ) -> Result<String> {
         info!(
             "Summarizing text with Anthropic API for event type: {}",
@@ -70,41 +71,41 @@ impl AnthropicClient {
 
 CRITICAL RULES:
 1. Output EXACTLY 1-2 sentences maximum. NO MORE.
-2. Must start with 'Claude Code'
+2. Must start with '{agent_name}'
 3. Use plain English only - absolutely NO code, NO technical syntax, NO file paths, NO command lines
 4. Make it conversational and natural for speech
 5. Focus on WHAT is happening, not HOW
 
 Examples:
-- 'Claude Code needs your permission to install project dependencies.'
-- 'Claude Code is waiting for you to approve running a database command.'
-- 'Claude Code has a question about the authentication feature.'
+- '{agent_name} needs your permission to install project dependencies.'
+- '{agent_name} is waiting for you to approve running a database command.'
+- '{agent_name} has a question about the authentication feature.'
 
 OUTPUT ONLY THE SUMMARY. NO EXPLANATIONS. NO CODE.")
             }
             _ => {
                 // Default Stop event prompt
-                "You are a voice notification assistant. Generate a human-readable summary of what was accomplished.
+                format!("You are a voice notification assistant. Generate a human-readable summary of what was accomplished.
 
 CRITICAL RULES:
 1. Output EXACTLY 1-2 sentences maximum. NO MORE.
-2. Must start with 'Claude Code'
+2. Must start with '{agent_name}'
 3. Use plain English only - absolutely NO code, NO technical syntax, NO file paths, NO variable names
 4. Make it conversational and natural for speech
 5. Focus on WHAT was done in simple terms, not HOW
 
 Examples:
-- 'Claude Code fixed the login bug and added better error handling. The authentication system is now working properly.'
-- 'Claude Code implemented the new search feature you requested.'
-- 'Claude Code updated the database configuration to improve performance.'
-- 'Claude Code has questions about the requirements for the payment system.'
+- '{agent_name} fixed the login bug and added better error handling. The authentication system is now working properly.'
+- '{agent_name} implemented the new search feature you requested.'
+- '{agent_name} updated the database configuration to improve performance.'
+- '{agent_name} has questions about the requirements for the payment system.'
 
-OUTPUT ONLY THE SUMMARY. NO EXPLANATIONS. NO CODE.".to_string()
+OUTPUT ONLY THE SUMMARY. NO EXPLANATIONS. NO CODE.")
             }
         };
 
         let request = AnthropicRequest {
-            model: "claude-sonnet-4-20250514".to_string(),
+            model: "claude-haiku-4-5-20251001".to_string(),
             max_tokens: 100,
             messages: vec![Message {
                 role: "user".to_string(),

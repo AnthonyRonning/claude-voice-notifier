@@ -55,6 +55,9 @@ struct Args {
 
     #[arg(long, help = "Hook message (for Notification events)")]
     hook_message: Option<String>,
+
+    #[arg(long, help = "Agent name for voice notifications", default_value = "Claude Code")]
+    agent_name: String,
 }
 
 #[tokio::main]
@@ -129,6 +132,7 @@ async fn main() -> Result<()> {
                 &transcript_path,
                 event_type,
                 args.hook_message.as_deref(),
+                &args.agent_name,
             )
             .await
             {
@@ -136,23 +140,23 @@ async fn main() -> Result<()> {
                 Err(e) => {
                     error!("Failed to process transcript: {}", e);
                     match event_type.as_str() {
-                        "Notification" => "Claude Code needs your attention".to_string(),
-                        _ => "Claude has finished a task".to_string(),
+                        "Notification" => format!("{} needs your attention", args.agent_name),
+                        _ => format!("{} has finished a task", args.agent_name),
                     }
                 }
             }
         } else {
             // Legacy mode without event type
-            match process_transcript(&config, &transcript_path).await {
+            match process_transcript(&config, &transcript_path, &args.agent_name).await {
                 Ok(summary) => summary,
                 Err(e) => {
                     error!("Failed to process transcript: {}", e);
-                    "Claude has finished a task".to_string()
+                    format!("{} has finished a task", args.agent_name)
                 }
             }
         }
     } else {
-        "Claude has finished a task".to_string()
+        format!("{} has finished a task", args.agent_name)
     };
 
     // Try different methods in order
@@ -185,7 +189,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn process_transcript(config: &Config, transcript_path: &PathBuf) -> Result<String> {
+async fn process_transcript(config: &Config, transcript_path: &PathBuf, agent_name: &str) -> Result<String> {
     info!("Processing transcript from: {:?}", transcript_path);
 
     // Extract the last assistant message
@@ -194,7 +198,7 @@ async fn process_transcript(config: &Config, transcript_path: &PathBuf) -> Resul
     // If we have an Anthropic API key, summarize the message
     if let Some(api_key) = &config.anthropic_api_key {
         let client = AnthropicClient::new(api_key.clone());
-        match client.summarize(&last_message).await {
+        match client.summarize(&last_message, agent_name).await {
             Ok(summary) => {
                 info!("Successfully generated summary");
                 Ok(summary)
@@ -216,6 +220,7 @@ async fn process_transcript_with_context(
     transcript_path: &PathBuf,
     event_type: &str,
     message: Option<&str>,
+    agent_name: &str,
 ) -> Result<String> {
     info!(
         "Processing transcript from: {:?} for event: {}",
@@ -229,7 +234,7 @@ async fn process_transcript_with_context(
     if let Some(api_key) = &config.anthropic_api_key {
         let client = AnthropicClient::new(api_key.clone());
         match client
-            .summarize_with_context(&last_message, event_type, message)
+            .summarize_with_context(&last_message, event_type, message, agent_name)
             .await
         {
             Ok(summary) => {
@@ -240,7 +245,7 @@ async fn process_transcript_with_context(
                 error!("Failed to summarize with Anthropic: {}", e);
                 // Fallback based on event type
                 match event_type {
-                    "Notification" => Ok("Claude Code needs your attention".to_string()),
+                    "Notification" => Ok(format!("{} needs your attention", agent_name)),
                     _ => Ok(truncate_message(&last_message)),
                 }
             }
@@ -248,7 +253,7 @@ async fn process_transcript_with_context(
     } else {
         info!("No Anthropic API key configured, using simple message");
         match event_type {
-            "Notification" => Ok("Claude Code needs your attention".to_string()),
+            "Notification" => Ok(format!("{} needs your attention", agent_name)),
             _ => Ok(truncate_message(&last_message)),
         }
     }

@@ -47,7 +47,7 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     case "$HOOK_EVENT_NAME" in
         "Stop")
             # For Stop hook, process normally (run in background)
-            nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --agent-name "Claude Code" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         "Notification")
@@ -58,7 +58,7 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
             else
                 # For Notification hook with actual permission request, process transcript with event context
                 echo "Processing permission request: $MESSAGE" >> ~/.config/voice-notifier/hook.log
-                nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+                nohup "$BINARY" --transcript "$TRANSCRIPT_PATH" --hook-event "$HOOK_EVENT_NAME" --hook-message "$MESSAGE" --agent-name "Claude Code" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             fi
             ;;
         
@@ -70,7 +70,7 @@ else
     # Fallback if no transcript is available
     case "$HOOK_EVENT_NAME" in
         "Stop")
-            nohup "$BINARY" -s "Claude Code has finished the task" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+            nohup "$BINARY" -s "Claude Code has finished the task" --agent-name "Claude Code" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             ;;
         
         "Notification")
@@ -78,7 +78,7 @@ else
             if [ -z "$MESSAGE" ] || [ "$MESSAGE" = "Claude is waiting for your input" ]; then
                 echo "Skipping idle timeout notification (already notified by Stop hook)" >> ~/.config/voice-notifier/hook.log
             else
-                nohup "$BINARY" -s "Claude Code needs your attention" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
+                nohup "$BINARY" -s "Claude Code needs your attention" --agent-name "Claude Code" >> ~/.config/voice-notifier/hook.log 2>&1 < /dev/null &
             fi
             ;;
         
